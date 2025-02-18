@@ -206,6 +206,7 @@ func (l *lineChart) render(result *defaultRenderResult, seriesList SeriesList) (
 			Font:        opt.Font,
 			Series:      series,
 			Range:       yRange,
+			Points:      points,
 		})
 	}
 	// 最大、最小的mark point

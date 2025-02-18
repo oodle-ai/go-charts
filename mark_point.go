@@ -113,7 +113,11 @@ func (m *markPointPainter) Render() (Box, error) {
 				value = markPointData.CustomYVal
 			}
 
-			painter.Pin(p.X, p.Y-symbolSize>>1, symbolSize)
+			pinY := p.Y
+			if p.Y < symbolSize {
+				pinY = symbolSize
+			}
+			painter.Pin(p.X, pinY-symbolSize>>1, symbolSize)
 			text := commafWithDigits(value)
 			textBox := painter.MeasureText(text)
 			if textBox.Width() > symbolSize {

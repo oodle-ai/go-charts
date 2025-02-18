@@ -100,11 +100,18 @@ type SeriesMarkData struct {
 	Type string
 
 	// Custom options.
-	XAxisIndex  int
-	CustomYVal  float64
-	FillColor   *Color
-	StrokeColor *Color
-	FontColor   *Color
+	XAxisIndex         int
+	XAxisEndIndex      int
+	CustomYVal         float64
+	FillColor          *Color
+	StrokeColor        *Color
+	FontColor          *Color
+	AboveColor         *Color
+	BelowColor         *Color
+	HideValue          bool
+	StrokeWidth        float64
+	IgnoreStrokeDashed bool
+	IgnoreArrow        bool
 }
 type SeriesMarkPoint struct {
 	// The width of symbol, default value is 30

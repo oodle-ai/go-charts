@@ -129,6 +129,9 @@ func (r *axisRange) getHeight(value float64) int {
 }
 
 func (r *axisRange) getRestHeight(value float64) int {
+	if math.IsNaN(value) {
+		return -1
+	}
 	return r.size - r.getHeight(value)
 }
 
