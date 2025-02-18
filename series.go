@@ -91,12 +91,20 @@ const (
 	SeriesMarkDataTypeMax     = "max"
 	SeriesMarkDataTypeMin     = "min"
 	SeriesMarkDataTypeAverage = "average"
+	SeriesMarkDataTypeCustom  = "custom"
 )
 
 type SeriesMarkData struct {
 	// The mark data type, it can be "max", "min", "average".
 	// The "average" is only for mark line
 	Type string
+
+	// Custom options.
+	XAxisIndex  int
+	CustomYVal  float64
+	FillColor   *Color
+	StrokeColor *Color
+	FontColor   *Color
 }
 type SeriesMarkPoint struct {
 	// The width of symbol, default value is 30

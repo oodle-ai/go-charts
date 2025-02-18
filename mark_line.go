@@ -78,10 +78,24 @@ func (m *markLinePainter) Render() (Box, error) {
 		}
 		summary := s.Summary()
 		for _, markLine := range s.MarkLine.Data {
-			// 由于mark line会修改style，因此每次重新设置
+			fillColor := opt.FillColor
+			if markLine.FillColor != nil {
+				fillColor = *markLine.FillColor
+			}
+
+			strokeColor := opt.StrokeColor
+			if markLine.StrokeColor != nil {
+				strokeColor = *markLine.StrokeColor
+			}
+
+			fontColor := opt.FontColor
+			if markLine.FontColor != nil {
+				fontColor = *markLine.FontColor
+			}
+
 			painter.OverrideDrawingStyle(Style{
-				FillColor:   opt.FillColor,
-				StrokeColor: opt.StrokeColor,
+				FillColor:   fillColor,
+				StrokeColor: strokeColor,
 				StrokeWidth: 1,
 				StrokeDashArray: []float64{
 					4,
@@ -89,7 +103,7 @@ func (m *markLinePainter) Render() (Box, error) {
 				},
 			}).OverrideTextStyle(Style{
 				Font:      font,
-				FontColor: opt.FontColor,
+				FontColor: fontColor,
 				FontSize:  labelFontSize,
 			})
 			value := float64(0)
@@ -98,6 +112,8 @@ func (m *markLinePainter) Render() (Box, error) {
 				value = summary.MaxValue
 			case SeriesMarkDataTypeMin:
 				value = summary.MinValue
+			case SeriesMarkDataTypeCustom:
+				value = markLine.CustomYVal
 			default:
 				value = summary.AverageValue
 			}
