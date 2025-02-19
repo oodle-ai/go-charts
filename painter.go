@@ -460,6 +460,12 @@ func (p *Painter) LineStroke(points []Point) *Painter {
 			shouldMoveTo = true
 			continue
 		}
+		if y < 0 {
+			// Ignore point, create a gap.
+			shouldMoveTo = true
+			continue
+		}
+
 		if shouldMoveTo || index == 0 {
 			p.MoveTo(x, y)
 			shouldMoveTo = false
@@ -517,17 +523,24 @@ func (p *Painter) SetBackground(width, height int, color Color, inside ...bool) 
 	p.FillStroke()
 	return p
 }
-func (p *Painter) MarkLine(x, y, width int) *Painter {
+func (p *Painter) MarkLine(x, y, width int, ignoreArrow bool) *Painter {
 	arrowWidth := 16
 	arrowHeight := 10
 	endX := x + width
 	radius := 3
-	p.Circle(3, x+radius, y)
-	p.render.Fill()
-	p.MoveTo(x+radius*3, y)
-	p.LineTo(endX-arrowWidth, y)
+	if !ignoreArrow {
+		p.Circle(3, x+radius, y)
+		p.render.Fill()
+		p.MoveTo(x+radius*3, y)
+		p.LineTo(endX-arrowWidth, y)
+	} else {
+		p.MoveTo(x, y)
+		p.LineTo(endX, y)
+	}
 	p.Stroke()
-	p.ArrowRight(endX, y, arrowWidth, arrowHeight)
+	if !ignoreArrow {
+		p.ArrowRight(endX, y, arrowWidth, arrowHeight)
+	}
 	return p
 }
 

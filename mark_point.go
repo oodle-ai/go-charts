@@ -81,15 +81,25 @@ func (m *markPointPainter) Render() (Box, error) {
 			StrokeWidth: 1,
 			Font:        opt.Font,
 		}
-		if isLightColor(opt.FillColor) {
-			textStyle.FontColor = defaultLightFontColor
-		} else {
-			textStyle.FontColor = defaultDarkFontColor
-		}
-		painter.OverrideDrawingStyle(Style{
-			FillColor: opt.FillColor,
-		}).OverrideTextStyle(textStyle)
 		for _, markPointData := range s.MarkPoint.Data {
+			fillColor := opt.FillColor
+			if markPointData.FillColor != nil {
+				fillColor = *markPointData.FillColor
+			}
+
+			if markPointData.FontColor != nil {
+				textStyle.FontColor = *markPointData.FontColor
+			} else {
+				if isLightColor(fillColor) {
+					textStyle.FontColor = defaultLightFontColor
+				} else {
+					textStyle.FontColor = defaultDarkFontColor
+				}
+			}
+
+			painter.OverrideDrawingStyle(Style{
+				FillColor: fillColor,
+			}).OverrideTextStyle(textStyle)
 			textStyle.FontSize = labelFontSize
 			painter.OverrideTextStyle(textStyle)
 			p := points[summary.MinIndex]
@@ -98,9 +108,16 @@ func (m *markPointPainter) Render() (Box, error) {
 			case SeriesMarkDataTypeMax:
 				p = points[summary.MaxIndex]
 				value = summary.MaxValue
+			case SeriesMarkDataTypeCustom:
+				p = points[markPointData.XAxisIndex]
+				value = markPointData.CustomYVal
 			}
 
-			painter.Pin(p.X, p.Y-symbolSize>>1, symbolSize)
+			pinY := p.Y
+			if p.Y < symbolSize {
+				pinY = symbolSize
+			}
+			painter.Pin(p.X, pinY-symbolSize>>1, symbolSize)
 			text := commafWithDigits(value)
 			textBox := painter.MeasureText(text)
 			if textBox.Width() > symbolSize {

@@ -24,6 +24,7 @@ package charts
 
 import (
 	"github.com/golang/freetype/truetype"
+	"github.com/wcharczuk/go-chart/v2"
 )
 
 // NewMarkLine returns a series mark line
@@ -63,6 +64,7 @@ type markLineRenderOption struct {
 	Font        *truetype.Font
 	Series      Series
 	Range       axisRange
+	Points      []Point
 }
 
 func (m *markLinePainter) Render() (Box, error) {
@@ -78,18 +80,41 @@ func (m *markLinePainter) Render() (Box, error) {
 		}
 		summary := s.Summary()
 		for _, markLine := range s.MarkLine.Data {
-			// 由于mark line会修改style，因此每次重新设置
-			painter.OverrideDrawingStyle(Style{
-				FillColor:   opt.FillColor,
-				StrokeColor: opt.StrokeColor,
-				StrokeWidth: 1,
-				StrokeDashArray: []float64{
+			fillColor := opt.FillColor
+			if markLine.FillColor != nil {
+				fillColor = *markLine.FillColor
+			}
+
+			strokeColor := opt.StrokeColor
+			if markLine.StrokeColor != nil {
+				strokeColor = *markLine.StrokeColor
+			}
+
+			fontColor := opt.FontColor
+			if markLine.FontColor != nil {
+				fontColor = *markLine.FontColor
+			}
+
+			strokeWidth := float64(1)
+			if markLine.StrokeWidth != 0 {
+				strokeWidth = markLine.StrokeWidth
+			}
+
+			var strokeDashArray []float64
+			if !markLine.IgnoreStrokeDashed {
+				strokeDashArray = []float64{
 					4,
 					2,
-				},
+				}
+			}
+			painter.OverrideDrawingStyle(Style{
+				FillColor:       fillColor,
+				StrokeColor:     strokeColor,
+				StrokeWidth:     strokeWidth,
+				StrokeDashArray: strokeDashArray,
 			}).OverrideTextStyle(Style{
 				Font:      font,
-				FontColor: opt.FontColor,
+				FontColor: fontColor,
 				FontSize:  labelFontSize,
 			})
 			value := float64(0)
@@ -98,6 +123,8 @@ func (m *markLinePainter) Render() (Box, error) {
 				value = summary.MaxValue
 			case SeriesMarkDataTypeMin:
 				value = summary.MinValue
+			case SeriesMarkDataTypeCustom:
+				value = markLine.CustomYVal
 			default:
 				value = summary.AverageValue
 			}
@@ -105,8 +132,36 @@ func (m *markLinePainter) Render() (Box, error) {
 			width := painter.Width()
 			text := commafWithDigits(value)
 			textBox := painter.MeasureText(text)
-			painter.MarkLine(0, y, width-2)
-			painter.Text(text, width, y+textBox.Height()>>1-2)
+			endOffset := 2
+			if markLine.IgnoreArrow {
+				endOffset = 0
+			}
+			xPoint := 0
+			if markLine.XAxisIndex > 0 {
+				xPoint = opt.Points[markLine.XAxisIndex].X
+			}
+			xAxiesEndIndex := width
+			if markLine.XAxisEndIndex > 0 {
+				xAxiesEndIndex = opt.Points[markLine.XAxisEndIndex].X
+			}
+			painter.MarkLine(xPoint, y, xAxiesEndIndex-endOffset-xPoint, markLine.IgnoreArrow)
+			if !markLine.HideValue {
+				painter.Text(text, width, y+textBox.Height()>>1-2)
+			}
+
+			if markLine.AboveColor != nil {
+				painter.OverrideDrawingStyle(Style{
+					FillColor: *markLine.AboveColor,
+				})
+				painter.Rect(chart.NewBox(y, 0, width, 0))
+			}
+
+			if markLine.BelowColor != nil {
+				painter.OverrideDrawingStyle(Style{
+					FillColor: *markLine.BelowColor,
+				})
+				painter.Rect(chart.NewBox(opt.Range.size, 0, width, y))
+			}
 		}
 	}
 	return BoxZero, nil

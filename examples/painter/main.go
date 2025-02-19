@@ -101,7 +101,7 @@ func main() {
 			4,
 			2,
 		},
-	}).MarkLine(0, 0, p.Width())
+	}).MarkLine(0, 0, p.Width(), false)
 
 	top += 60
 	// Polygon
